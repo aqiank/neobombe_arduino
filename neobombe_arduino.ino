@@ -6,34 +6,22 @@
 #define TOP (0)
 #define MIDDLE (1)
 #define BOTTOM (2)
-#define TYPE (TOP)
+#define TYPE (BOTTOM)
 
 #define NUM_SHIELDS (TYPE + 1)
 #define NUM_MOTORS (NUM_SHIELDS * 2)
 
+#define LED_PIN (13)
+
 Adafruit_MotorShield AFMS[NUM_SHIELDS];
 Adafruit_StepperMotor *motors[NUM_MOTORS];
 
+AccelStepper accels[NUM_MOTORS] = {
+	AccelStepper(forwardstep_1, backwardstep_1),
+	AccelStepper(forwardstep_2, backwardstep_2),
+};
+
 #if TYPE == TOP
-	void forwardstep_1() {
-	  motors[0]->onestep(FORWARD, SINGLE);
-	}
-	void backwardstep_1() {
-	  motors[0]->onestep(BACKWARD, SINGLE);
-	}
-
-	void forwardstep_2() {
-	  motors[1]->onestep(FORWARD, SINGLE);
-	}
-	void backwardstep_2() {
-	  motors[1]->onestep(BACKWARD, SINGLE);
-	}
-
-	AccelStepper accels[NUM_MOTORS] = {
-		AccelStepper(forwardstep_1, backwardstep_1),
-		AccelStepper(forwardstep_2, backwardstep_2),
-	};
-
 	#define MOTOR_SPEED (300.0)
 #elif TYPE == MIDDLE
 	#define MOTOR_SPEED (20)
@@ -71,6 +59,10 @@ void setup() {
 	#endif
 
 	Serial.flush();
+
+	// LED for debugging purpose
+	pinMode(LED_PIN, OUTPUT);
+	digitalWrite(LED_PIN, LOW);
 }
 
 void loop() {
@@ -79,11 +71,13 @@ void loop() {
 		if (b == 65) {
 			isProcessing = true;
 			index = 0;
+			digitalWrite(LED_PIN, HIGH);
 		} else if (b == 66) {
 			isProcessing = false;
 			for (int i = 0; i < NUM_MOTORS; i++) {
 				motors[i]->release();
 			}
+			digitalWrite(LED_PIN, LOW);
 		}
 	}
 
@@ -116,4 +110,18 @@ void processBottom() {
 		loggedTime = millis();
 		index = (index + 1) % NUM_MOTORS;
 	}
+}
+
+void forwardstep_1() {
+  motors[0]->onestep(FORWARD, SINGLE);
+}
+void backwardstep_1() {
+  motors[0]->onestep(BACKWARD, SINGLE);
+}
+
+void forwardstep_2() {
+  motors[1]->onestep(FORWARD, SINGLE);
+}
+void backwardstep_2() {
+  motors[1]->onestep(BACKWARD, SINGLE);
 }
